@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { BaseURL } from "@/Constant";
@@ -56,7 +55,7 @@ export function Signup() {
   const navigate = useNavigate();
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const { fullName, email, dateOfBirth, coupon_code } = values;
+    const { fullName, email, coupon_code } = values;
     // get dateofBirth from input type date in html
     const dateOfBirthValue = form.getValues("dateOfBirth");
 
@@ -154,7 +153,7 @@ export function Signup() {
         <FormField
           control={form.control}
           name="coupon_code"
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Coupon Code</FormLabel>
               <FormControl>
