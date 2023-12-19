@@ -6,11 +6,14 @@ from django.contrib.postgres.fields import DateTimeRangeField
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import pytz
 
 class YogaTimings(models.Model):
+    external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     timespan = DateTimeRangeField()
+    batch = models.ForeignKey('YogaBatch', on_delete=models.CASCADE, related_name='timings', blank=True, null=True)
 
     class Meta:
         constraints = [
@@ -48,11 +51,10 @@ class YogaBatch(models.Model):
         (11, 'November'),
         (12, 'December'),
     ]
+    external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     year = models.IntegerField()
     month = models.IntegerField(choices=MONTH_CHOICES)
-    yoga_users = models.ForeignKey('YogaUser', on_delete=models.CASCADE, related_name='yoga_batches', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    timings = models.ManyToManyField(YogaTimings, through='YogaBatchTimings')
 
     class Meta:
         db_table = 'yoga_batch'
@@ -61,25 +63,20 @@ class YogaBatch(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
     
-class YogaBatchTimings(models.Model):
-    batch = models.ForeignKey(YogaBatch, on_delete=models.CASCADE)
-    timings = models.ForeignKey(YogaTimings, on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = 'yoga_batch_timings'
-        unique_together = ('batch', 'timings',)
-
     def __str__(self):
-        return f'{self.batch} - {self.timings}'
+        return f'{self.year} - {self.month}'
 
 class YogaBooking(models.Model):
     external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=250)
-    email = models.EmailField(max_length=250, unique=True)
+    email = models.EmailField(max_length=250)
     date_of_birth = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    yoga_batch = models.ForeignKey(YogaBatch, on_delete=models.CASCADE, related_name='yoga_users', blank=True, null=True)
 
+    @property
+    def is_paid(self):
+        return self.order.filter(status='paid').exists()
     class Meta:
         db_table = 'yoga_user'
         indexes = [
@@ -90,10 +87,12 @@ class YogaBooking(models.Model):
         return self.name
     
 class Offer(models.Model):
+    external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=30)
     discount = models.DecimalField(max_digits=10, decimal_places=2)
     validity_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    code = models.CharField(max_length=30, unique=True)
 
     class Meta:
         db_table = 'offer'
@@ -112,24 +111,21 @@ class Order(models.Model):
     external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=30, default='created', choices=ORDER_STATUS)
-
+    yoga_booking = models.ForeignKey(YogaBooking, on_delete=models.CASCADE, related_name='order')
+    yoga_batch = models.ForeignKey(YogaBatch, on_delete=models.CASCADE, related_name='order')
+    yoga_timing = models.ForeignKey(YogaTimings, on_delete=models.CASCADE, related_name='order')
+    offer = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name='order', blank=True, null=True)
     class Meta:
         db_table = 'order'
-
-class PaymentTransaction(models.Model):
-    external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='transactions')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(default=timezone.now)
 
 @receiver(post_save, sender=YogaBatch)
 def create_default_timings(sender, instance, created, **kwargs):
     if created:
         timings = [
-            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 6), end_time=timezone.datetime(instance.year, instance.month, 1, 7)),
-            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 7), end_time=timezone.datetime(instance.year, instance.month, 1, 8)),
-            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 8), end_time=timezone.datetime(instance.year, instance.month, 1, 9)),
-            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 17), end_time=timezone.datetime(instance.year, instance.month, 1, 18)),
+            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 6, tzinfo=pytz.UTC), end_time=timezone.datetime(instance.year, instance.month, 1, 7, tzinfo=pytz.UTC)),
+            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 7, tzinfo=pytz.UTC), end_time=timezone.datetime(instance.year, instance.month, 1, 8, tzinfo=pytz.UTC)),
+            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 8, tzinfo=pytz.UTC), end_time=timezone.datetime(instance.year, instance.month, 1, 9, tzinfo=pytz.UTC)),
+            YogaTimings(start_time=timezone.datetime(instance.year, instance.month, 1, 17, tzinfo=pytz.UTC), end_time=timezone.datetime(instance.year, instance.month, 1, 18, tzinfo=pytz.UTC)),
         ]
         for timing in timings:
             timing.save()
