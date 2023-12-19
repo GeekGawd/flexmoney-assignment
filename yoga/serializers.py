@@ -19,23 +19,27 @@ class YogaBookingSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        offer = self.initial_data.get("offer_code", None)
+        offer = self.initial_data.get("coupon_code", None)
         yoga_timing = self.initial_data.get("yoga_timing")
         yoga_booking, _ = YogaBooking.objects.get_or_create(**validated_data)
         amount = 500
+        offer_instance = None
         if offer:
             offer_instance = Offer.objects.get(code=offer)
             amount -= offer_instance.discount
         currency = "INR"
         status = "created"
-        
         yoga_timing = YogaTimings.objects.get(external_id=yoga_timing)
-        Order.objects.create(amount=amount, currency=currency, status=status, yoga_booking=yoga_booking, yoga_batch=yoga_timing.batch, yoga_timing=yoga_timing, offer=offer_instance)
+        if offer_instance:
+            Order.objects.create(amount=amount, currency=currency, status=status, yoga_booking=yoga_booking, yoga_batch=yoga_timing.batch, yoga_timing=yoga_timing, offer=offer_instance)
+        else:
+            Order.objects.create(amount=amount, currency=currency, status=status, yoga_booking=yoga_booking, yoga_batch=yoga_timing.batch, yoga_timing=yoga_timing)
         return yoga_booking
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["order"] = instance.order.last().external_id
+        data["proceed_to_pay"] = instance.order.last().amount
         data.pop("yoga_batch")
         return data
     
