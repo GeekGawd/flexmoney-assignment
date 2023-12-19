@@ -3,6 +3,9 @@
 Deployed Frontend URL: https://flexmoney-assignment-mu.vercel.app/
 Deployed Backend URL: https://driving-surely-martin.ngrok-free.app (Had to host it on ngrok in the last minute because of SSL issues)
 Deployed Backend URL (Virual Machine): http://172.172.165.127/
+URL for admin panel: https://driving-surely-martin.ngrok-free.app/admin
+Username: admin
+Password admin
 
 Requirements for the admission form are:
 - Only people within the age limit of 18-65 can enroll for the monthly classes and they will
