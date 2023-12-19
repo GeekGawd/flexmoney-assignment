@@ -29,7 +29,6 @@ const formSchema = z.object({
     dateOfBirth: z.date({
       required_error: "Date of birth is required",
     }),
-    mobileNumber: z.string().min(10, { message: "Invalid mobile number" }),
     email: z
       .string()
       .email({ message: "Invalid email" })
@@ -43,7 +42,6 @@ export function Signup() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: "",
-      mobileNumber: "",
       email: "",
       coupon_code: "",
     },
