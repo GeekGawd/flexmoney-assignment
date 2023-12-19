@@ -48,6 +48,13 @@ pip install -r requirements.txt
 ```CMD
 python manage.py test
 ```
+
+6. To run the frontend server
+```CMD
+cd client/
+npm i
+npm run dev
+```
 <!-- 
 ### Docker Setup
 

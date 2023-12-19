@@ -162,6 +162,10 @@ class YogaBookingView(GenericAPIView, mixins.CreateModelMixin):
             request.data["yoga_batch"] = yoga_timing.batch.id
             # Get the associated YogaBatch
             yoga_batch = yoga_timing.batch
+            
+            # Don't allow creation of booking for past months
+            if yoga_batch.year < datetime.datetime.now().year or (yoga_batch.year == datetime.datetime.now().year and yoga_batch.month < datetime.datetime.now().month):
+                return Response({"message": "Yoga Booking cannot be made for past months"}, status=status.HTTP_400_BAD_REQUEST)
         except YogaTimings.DoesNotExist:
             return Response({"message": "Invalid Yoga Timing"}, status=status.HTTP_404_NOT_FOUND)
 
