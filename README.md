@@ -39,6 +39,11 @@ virtualenv venv
 ```CMD
 pip install -r requirements.txt
 ```
+
+5. To Check if it is working correctly run tests
+```CMD
+python manage.py test
+```
 <!-- 
 ### Docker Setup
 
