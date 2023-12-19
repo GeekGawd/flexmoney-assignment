@@ -1,16 +1,15 @@
-import { useState } from 'react';
+
 import { format, addMonths, subMonths } from 'date-fns';
 import { Button } from '../ui/button';
 
-const CalendarHeader = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-
+const CalendarHeader = ({ currentDate, setCurrentDate } : any) => {
+  
   const handlePrevMonth = () => {
-    setCurrentDate((prevDate) => subMonths(prevDate, 1));
+    setCurrentDate(subMonths(currentDate, 1));
   };
 
   const handleNextMonth = () => {
-    setCurrentDate((prevDate) => addMonths(prevDate, 1));
+    setCurrentDate(addMonths(currentDate, 1));
   };
 
   return (

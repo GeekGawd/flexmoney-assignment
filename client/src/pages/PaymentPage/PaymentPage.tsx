@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation} from 'react-router-dom';
+import axios from 'axios';
+import { BaseURL } from '@/Constant';
 
 const formSchema = z.object({
     upi: z.string()
         .min(1, { message: 'UPI ID is required' })
         .regex(/[\w.-]+@[\w.-]+/, { message: 'Please enter a valid UPI ID' }), // A basic regex for UPI ID validation
-    coupon: z.string().regex(/^[A-Z0-9]{5,10}$/, { message: 'Invalid coupon code' }).optional(), // An example regex for a coupon code
 });
 
 const PaymentPage = () => {
@@ -29,10 +30,27 @@ const PaymentPage = () => {
     });
     const navigate = useNavigate()
 
+    const location = useLocation();
+  const state = location.state as { order: string  , proceed_to_pay : string } ;
+
+  console.log(state?.order , state?.proceed_to_pay);
+  
+
     const onSubmit = (values: z.infer<typeof formSchema>) => {
+
         console.log(values);
+        let data = {
+            order_id : state?.order,    
+        }
         navigate("/success")
-        // Here you would add your payment processing logic
+        axios.post(`${BaseURL}payment/` , data)
+        .then((res) => {
+            console.log(res);
+            
+        }).catch((err) => {
+            console.log(err);
+            
+        })
     };
 
     return (
@@ -51,21 +69,8 @@ const PaymentPage = () => {
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="coupon"
-                    render={({ field, fieldState }) => (
-                        <FormItem>
-                            <FormLabel>Coupon Code</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter your coupon code" {...field} className="w-full" />
-                            </FormControl>
-                            <FormMessage>{fieldState.error?.message}</FormMessage>
-                        </FormItem>
-                    )}
-                />
                 <Button type="submit" className="w-full mt-6">
-                    Proceed to pay Rs. 500
+                    Proceed to pay Rs. <span>{`  ${state?.proceed_to_pay}`}</span>
                 </Button>
             </form>
         </Form>
