@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import YogaBatch, YogaBooking, YogaTimings, Order, Offer
 import datetime
 
+
 class YogaBookingSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -18,7 +19,7 @@ class YogaBookingSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        offer = self.initial_data.get("code", None)
+        offer = self.initial_data.get("offer_code", None)
         yoga_timing = self.initial_data.get("yoga_timing")
         yoga_booking, _ = YogaBooking.objects.get_or_create(**validated_data)
         amount = 500

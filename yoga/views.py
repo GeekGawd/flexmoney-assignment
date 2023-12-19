@@ -5,14 +5,59 @@ from .models import YogaBatch, YogaBooking, YogaTimings, Offer, Order
 import datetime
 from .serializers import YogaBookingSerializer, YogaBatchSerializer
 from django.db.models import F
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiResponse, OpenApiExample, inline_serializer
+from rest_framework import serializers
+
 
 
 class HelloWorld(GenericAPIView):
+    @extend_schema(responses={200: None})
     def get(self, request):
         return Response({"message": "Hello, world!"})
 
+class YogaBatchRequestSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    month = serializers.IntegerField()
 class YogaBatchView(GenericAPIView):
     serializer_class = YogaBatchSerializer
+
+    @extend_schema(
+        request=YogaBatchRequestSerializer,
+        parameters=[
+            OpenApiParameter(
+                name="year",
+                type=OpenApiTypes.STR,
+                description="Year for the yoga batch",
+                required=True,
+                examples=[
+                    OpenApiExample(
+                        "2023",
+                        summary="A valid year",
+                        value="2023",
+                        description="This is a valid year",
+                    ),
+                ],
+            ),
+            OpenApiParameter(
+                name="month",
+                type=OpenApiTypes.STR,
+                description="Month for the yoga batch",
+                required=True,
+                examples=[
+                    OpenApiExample(
+                        "12",
+                        summary="A valid month",
+                        value="12",
+                        description="This is a valid month",
+                    ),
+                ],
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(response=YogaBatchSerializer, description='Successful operation'),
+            400: OpenApiResponse(description='Bad request (something invalid)'),
+        },
+    )
     def post(self, request, *args, **kwargs):
         year = request.data.get("year")
         month = request.data.get("month")
@@ -23,9 +68,44 @@ class YogaBatchView(GenericAPIView):
         data = self.serializer_class(yoga_batch).data
         return Response(data)
 
+class YogaBookingRequestSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    email = serializers.EmailField()
+    date_of_birth = serializers.DateField(input_formats=['%d-%m-%Y'])
+    yoga_timing = serializers.UUIDField()
+    offer_code = serializers.CharField(required=False)
+
+class YogaBookingResponseSerializer(serializers.Serializer):
+    external_id = serializers.UUIDField()
+    name = serializers.CharField()
+    email = serializers.EmailField()
+    date_of_birth = serializers.DateField()
+    order = serializers.UUIDField()
 class YogaBookingView(GenericAPIView, mixins.CreateModelMixin):
     serializer_class = YogaBookingSerializer
-
+    @extend_schema(
+        request=YogaBookingRequestSerializer,
+        parameters=[
+            OpenApiParameter(
+                name="date_of_birth",
+                type=OpenApiTypes.STR,
+                description="Date of birth of the user",
+                required=True,
+                examples=[
+                    OpenApiExample(
+                        "01-01-1990",
+                        summary="A valid date of birth",
+                        value="01-01-1990",
+                        description="This is a valid date of birth",
+                    ),
+                ]
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(response=YogaBookingResponseSerializer, description='Successful operation'),
+            400: OpenApiResponse(description='Bad request (something invalid)'),
+        },
+    )
     def post(self, request, *args, **kwargs):
         date_of_birth = request.data.get("date_of_birth")
         email = request.data.get("email")
@@ -59,7 +139,20 @@ class YogaBookingView(GenericAPIView, mixins.CreateModelMixin):
             pass
         return super().create(request, *args, **kwargs)
     
+class PaymentRequestSerializer(serializers.Serializer):
+    order_id = serializers.UUIDField()
+
+class PaymentResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
 class PaymentView(GenericAPIView):
+    @extend_schema(
+        request=PaymentRequestSerializer,
+        responses={
+            200: OpenApiResponse(response=PaymentResponseSerializer, description='Successful operation'),
+            400: OpenApiResponse(description='Bad request (something invalid)'),
+            404: OpenApiResponse(description='Invalid Order ID'),
+        },
+    )
     def post(self, request, *args, **kwargs):
         order_id = request.data.get("order_id")
 
