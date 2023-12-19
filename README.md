@@ -68,7 +68,9 @@ I used uuid field in all the models to create a external id and used the interna
 
 I did this because of security and performance reasons, managing uuid as primary key is very cumbersome and can lead to loss in read performance. However, Autoincrement field can lead to security issues.
 
-So, I used both as the best of the worlds
+So, I used both as the best of the worlds.
+
+I have also indexed the database fields as necessary.
 
 
 ![Database ERD](https://i.imgur.com/WqUyg93.png)
