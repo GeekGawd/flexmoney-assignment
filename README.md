@@ -87,6 +87,14 @@ This model represents an order made by a user. It includes fields for the amount
 
 This is used to do the transaction and create a corresponding order for the user.
 
+### Email Service
+
+Implemented sending email to the user with order id so they can verify their purchase at the yoga center.
+
+### Future Scope
+
+- Could have dockerised the application as well not much issue here, but have an exam tomorrow, so because of the time crunch skiping it.
+
 ## Notable Libraries Used
 
 - python-decouple - For environment variable

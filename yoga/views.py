@@ -7,7 +7,18 @@ from .serializers import YogaBookingSerializer, YogaBatchSerializer
 from django.db.models import F
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes, OpenApiResponse, OpenApiExample, inline_serializer
 from rest_framework import serializers
+from django.core.mail import EmailMessage
 
+def send_mail(email, subject, order):
+    order_id = order.external_id
+    yoga_batch = order.yoga_batch
+    start_yoga_timing = order.yoga_timing.start_time.strftime("%I:%M %p")
+    end_yoga_timing = order.yoga_timing.end_time.strftime("%I:%M %p")
+    msg = EmailMessage(subject, f'Here is your order id {order_id}, kindly show it at Yoga Center to verify your session.<br>Yoga Batch: {yoga_batch}<br>Yoga Timing: {start_yoga_timing} - {end_yoga_timing}', 'collegeform.contact@gmail.com', (email,))
+    msg.content_subtype = "html"
+    msg.send()
+    
+    return "Email Sent"
 
 class HelloWorld(GenericAPIView):
     @extend_schema(responses={200: None})
@@ -207,5 +218,7 @@ class PaymentView(GenericAPIView):
             # If the order with the provided order_id doesn't exist, return a 404 response
             return Response({"message": "Invalid Order ID"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Send email to the user
+        send_mail(order.yoga_booking.email, 'Yoga Payment Received!', order)
         # Return a success message indicating that the payment was successful
         return Response({"message": "Payment Successful"})

@@ -8,6 +8,21 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import pytz
 
+MONTHS = {
+        1: 'January',
+        2: 'February',
+        3: 'March',
+        4: 'April',
+        5: 'May',
+        6: 'June',
+        7: 'July',
+        8: 'August',
+        9: 'September',
+        10: 'October',
+        11: 'November',
+        12: 'December',
+    }
+
 class YogaTimings(models.Model):
     external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     start_time = models.DateTimeField()
@@ -64,7 +79,7 @@ class YogaBatch(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f'{self.year} - {self.month}'
+        return f'{self.year} - {MONTHS[self.month]}'
 
 class YogaBooking(models.Model):
     external_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

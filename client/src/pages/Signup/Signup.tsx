@@ -57,7 +57,11 @@ export function Signup() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const { fullName, email, dateOfBirth, coupon_code } = values;
-    const formattedDateOfBirth = format(dateOfBirth, 'dd-MM-yyyy');
+    // get dateofBirth from input type date in html
+    const dateOfBirthValue = form.getValues("dateOfBirth");
+
+    const formattedDateOfBirth = format(new Date(dateOfBirthValue), "dd-MM-yyyy");
+    
     const formattedData = {
         yoga_timing: state?.id,     
         name: fullName,
@@ -72,7 +76,8 @@ export function Signup() {
         }).catch((err) => {
             if (err.response && err.response.status >= 400) {
                 console.log("hello world")
-                toast.error("An error occurred: " + err.response.data);
+                const data = {...err.response.data};
+                toast.error("An error occurred: " + JSON.stringify(data));
             }
             console.error(err);
         });
@@ -106,49 +111,29 @@ export function Signup() {
             <FormItem className="flex flex-col">
               <FormLabel>Date of birth</FormLabel>
               <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                    variant={"outline"}
-                      className={cn(
-                        "pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="mobileNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mobile Number</FormLabel>
-              <FormControl>
-                <Input type="tel" placeholder="Mobile Number" {...field} />
-              </FormControl>
+  <PopoverTrigger asChild>
+    <FormControl>
+      <Button
+        variant={"outline"}
+        className={cn(
+          "pl-3 text-left font-normal",
+          !field.value && "text-muted-foreground"
+        )}
+      >
+        {field.value ? (
+          format(field.value, "PPP")
+        ) : (
+          <span>Pick a date</span>
+        )}
+        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+      </Button>
+    </FormControl>
+  </PopoverTrigger>
+  <PopoverContent className="w-auto p-0" align="start">
+    <input type="date" onChange={(e) => form.setValue('dateOfBirth', new Date(e.target.value))}></input>
+  </PopoverContent>
+</Popover>
+
               <FormMessage />
             </FormItem>
           )}
